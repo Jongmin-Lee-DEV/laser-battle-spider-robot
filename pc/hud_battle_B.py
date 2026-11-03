@@ -29,7 +29,7 @@ hud_battle.py - 거미로봇 전투 HUD (PC에서 실행)
 모드
     전투: 카메라 영상 + 체력 / 레이저.  상대 레이저에 맞으면 로봇이 알려 줘서 체력 -1
           (A 로봇 25Hz, B 로봇 35Hz로 깜빡여 쏘고 상대 주파수만 감지 -> 내 레이저로는 안 맞음)
-    미로: 카메라 영상 + 5분 타이머.  레이저 발사 / 조준 / 피격 모두 꺼짐 (로봇 쪽에서도 막음)
+    미로: 카메라 영상 + 100초 타이머.  레이저 발사 / 조준 / 피격 모두 꺼짐 (로봇 쪽에서도 막음)
 
 Aseprite 이미지(hud_assets 폴더)로 꾸미는 방법은 hud_test.py 와 같습니다.
 """
@@ -251,7 +251,7 @@ MAZE = [
 MAZE_START = (1.5, 13.5, 90.0)       # 출발 위치 (x, y, 바라보는 방향 도: 0=북 90=동)
 MAZE_GOAL = (19, 1)                  # 도착 칸 (이 칸에 들어가면 클리어)
 MAZE_W, MAZE_H = len(MAZE[0]), len(MAZE)
-MAZE_TIME = 300.0            # 미로 모드 제한 시간 (초) = 5분
+MAZE_TIME = 100.0            # 미로 모드 제한 시간 (초) = 1분 40초
 
 # 레이저 테스트용 맵: 넓은 방 (벽 가장자리 + 기둥 몇 개)
 ARENA = [
@@ -787,7 +787,7 @@ class HUD:
             print("[reset]")
 
     def toggle_maze(self):
-        """4번: 미로 모드 <-> 레이저 테스트 모드. 바꿀 때마다 출발 지점으로 이동하고 미로는 5분 타이머가 새로 시작."""
+        """4번: 미로 모드 <-> 레이저 테스트 모드. 바꿀 때마다 출발 지점으로 이동하고 미로는 100초 타이머가 새로 시작."""
         self.maze_mode = not self.maze_mode
         self.guard_until = time.time() + SPAWN_GUARD
         self.sim.grid = MAZE if self.maze_mode else ARENA
@@ -796,7 +796,7 @@ class HUD:
         self.timeup = False
         self.cleared = False
         self.maze_t0 = time.time()
-        print("[mode] 미로 (5분 타이머 시작, 레이저 꺼짐)" if self.maze_mode else "[mode] 전투")
+        print("[mode] 미로 (100초 타이머 시작, 레이저 꺼짐)" if self.maze_mode else "[mode] 전투")
 
     def maze_left(self, now):
         if self.cleared:
@@ -818,7 +818,7 @@ class HUD:
         p = self.pressed
         if self.maze_mode and not self.timeup and not self.cleared and self.maze_left(time.time()) <= 0:
             self.timeup = True
-            print("[timeup] 5분 종료 -> 로봇 이동 잠금 신호")
+            print("[timeup] 100초 종료 -> 로봇 이동 잠금 신호")
         if self.maze_mode and not self.link.connected and not self.cleared and not self.timeup and \
                 (int(self.sim.x), int(self.sim.y)) == MAZE_GOAL:
             self.clear_left = self.maze_left(time.time())    # 먼저 남은 시간을 기록하고 나서 정지
@@ -1166,7 +1166,7 @@ class HUD:
                 label, color = f"{s.cooldown_left():.1f}s", C["warn"]
             c.create_text(440, top + 78, text=label, anchor="nw", fill=color, font=FONT_NUM)
 
-        # --- 미로 모드: 왼쪽 칸(체력)을 5분 타이머로, 오른쪽 칸(레이저)은 비움 ---
+        # --- 미로 모드: 왼쪽 칸(체력)을 100초 타이머로, 오른쪽 칸(레이저)은 비움 ---
         if self.maze_mode:
             for (xa, xb) in ((14, 290), (430, 706)):
                 c.create_rectangle(xa, top, xb, BAR_Y + 138, fill=C["panel"], outline=C["panel_line"])
